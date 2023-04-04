@@ -4,6 +4,11 @@ import Player from "./Player";
 import SpotifyWebApi from "spotify-web-api-node";
 import TrackSearchResult from "./TrackSearchResult";
 import axios from "axios";
+import Logo from "./logo-1.png";
+import { FaPlay } from "react-icons/fa";
+import { BsFillHandThumbsDownFill } from "react-icons/bs";
+import { BsFillHandThumbsUpFill } from "react-icons/bs";
+import SpotifyPlayer from "react-spotify-web-playback";
 
 // Clinet ID
 const spotifyApi = new SpotifyWebApi({
@@ -22,6 +27,20 @@ export default function Dashboard({ code }) {
     setPlayingTrack(track);
     setSearch("");
     setLyrics("");
+  }
+
+  function getRandomGenre() {
+    const genres = [
+      "rock",
+      "pop",
+      "hip hop",
+      "country",
+      "jazz",
+      "dance",
+      "deep house",
+    ];
+    const randomIndex = Math.floor(Math.random() * genres.length);
+    return genres[randomIndex];
   }
 
   // This hook makes a HTTP GET request to the /lyrics endpoint
@@ -48,59 +67,101 @@ export default function Dashboard({ code }) {
     spotifyApi.setAccessToken(accessToken);
   }, [accessToken]);
 
-  useEffect(() => {
-    // If both these conditions are met, the function uses the spotifyApi to search for tracks that match the search query
-    if (!search) return setSearchResults([]);
-    if (!accessToken) return;
+  // Function to handle the "Faplay" button click
+  const handleFaplayClick = () => {
+    // Generate a random search query
+    const randomQuery = "genre:" + getRandomGenre();
 
-    // This stops the code from setting the searchResults variable if the request is cancelled
-    let cancel = false;
-    spotifyApi.searchTracks(search).then((res) => {
-      if (cancel) return;
-      setSearchResults(
-        res.body.tracks.items.map((track) => {
-          const smallestAlbumImage = track.album.images.reduce(
-            (smallest, image) => {
-              if (image.height < smallest.height) return image;
-              return smallest;
-            },
-            track.album.images[0]
-          );
+    // Search for tracks with the random query
+    spotifyApi.searchTracks(randomQuery).then((res) => {
+      const tracks = res.body.tracks.items;
 
-          return {
-            artist: track.artists[0].name,
-            title: track.name,
-            uri: track.uri,
-            albumUrl: smallestAlbumImage.url,
-          };
-        })
-      );
+      // Choose a random track from the search results
+      const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
+
+      // Set the playing track to the chosen track
+      setPlayingTrack({
+        artist: randomTrack.artists[0].name,
+        title: randomTrack.name,
+        uri: randomTrack.uri,
+        images: randomTrack.album.images,
+      });
     });
+  };
 
-    return () => (cancel = true);
-  }, [search, accessToken]);
+  function handleSkipClick() {
+    // Generate a random search query
+    const randomQuery = "genre:" + getRandomGenre();
+
+    // Search for tracks with the random query
+    spotifyApi.searchTracks(randomQuery).then((res) => {
+      const tracks = res.body.tracks.items;
+
+      // Choose a random track from the search results
+      const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
+
+      // Set the playing track to the chosen track
+      setPlayingTrack({
+        artist: randomTrack.artists[0].name,
+        title: randomTrack.name,
+        uri: randomTrack.uri,
+        images: randomTrack.album.images,
+      });
+    });
+  }
+
+  async function handleLikeClick() {
+    if (!playingTrack) return;
+
+    try {
+      await spotifyApi.addToMySavedTracks([playingTrack.uri]);
+      console.log(
+        `Added ${playingTrack.title} by ${playingTrack.artist} to Liked Songs`
+      );
+    } catch (e) {
+      console.error("Error adding track to Liked Songs:", e);
+    }
+  }
 
   return (
-    <div className="flex h-screen flex-col bg-slate-500 ">
-      <input
-        id="searchBox"
-        className="flex justify-center self-center bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500   pl-10 p-2.5 w-1/4 mt-6 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 text-center "
-        type="text"
-        placeholder="Search Songs/Artists"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      ></input>
-      <div className=" flex-grow-1 my-2 overflow-y-auto ">
-        {searchResults.map((track) => (
-          <TrackSearchResult
-            track={track}
-            key={track.uri}
-            chooseTrack={chooseTrack}
+    <div className="flex h-screen flex-col bg-slate-500 justify-center items-center">
+      <div
+        id="Card"
+        className="h-1/2 w-1/2 flex justify-center bg-gray-900 relative rounded-lg shadow-custom "
+      >
+        <div className="rounded overflow-hidden shadow-lg w-full">
+          <img
+            className="h-24 flex items-center justify-center mx-auto"
+            src={Logo}
+            alt="Sunset in the mountains"
           />
-        ))}
-        {searchResults.length === 0 && (
-          <div className=" text-center whitespace-pre text-white">{lyrics}</div>
-        )}
+          <div className="px-6 py-4">
+            <div className="font-bold text-xl mb-2 flex justify-center text-white p-4">
+              {playingTrack ? playingTrack.title : "(Song Title)"}
+            </div>
+            <h2 className="text-base flex justify-center text-white p-4">
+              {playingTrack ? playingTrack.artist : "(Artist)"}
+            </h2>
+            {playingTrack?.images?.length && (
+              <img
+                className="h-80 w-80 flex items-center justify-center mx-auto bg-white"
+                src={playingTrack.images[0].url}
+                alt={playingTrack.name}
+              />
+            )}
+            <div className="absolute bottom-0 w-full text-center text-4xl -space-x-36">
+              <button onClick={handleSkipClick}>
+                <BsFillHandThumbsDownFill className="fill-primary hover:fill-red-600" />
+              </button>
+              <button onClick={handleFaplayClick}>
+                <FaPlay className="fill-primary hover:opacity-60" />
+              </button>
+              <button onClick={handleLikeClick}>
+                <BsFillHandThumbsUpFill className="fill-primary hover:fill-green-500" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="fixed bottom-0 w-full">

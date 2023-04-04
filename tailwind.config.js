@@ -16,6 +16,9 @@ module.exports = {
       animation: {
         "pulse-slow": "pulse 10s linear infinite",
       },
+      boxShadow: {
+        custom: "0 8px 15px #55D1F0",
+      },
     },
   },
   plugins: [],
