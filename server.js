@@ -24,8 +24,8 @@ app.post("/refresh", (req, res) => {
     .refreshAccessToken()
     .then((data) => {
       res.json({
-        accessToken: data.body.accessToken,
-        expiresIn: data.body.expiresIn,
+        accessToken: data.body.access_token, // Updated
+        expiresIn: data.body.expires_in, // Updated
       });
     })
     .catch((err) => {
@@ -63,22 +63,23 @@ app.get("/lyrics", async (req, res) => {
   res.json({ lyrics });
 });
 
-app.post("/add-to-library", (req, res) => {
-  const accessToken = req.body.accessToken;
-  const trackId = req.body.trackId;
+// POST endpoint for adding a track to the user's library
+app.post("/spotify/like", async (req, res) => {
+  const { accessToken, trackUri } = req.body;
   const spotifyApi = new SpotifyWebApi();
   spotifyApi.setAccessToken(accessToken);
 
-  spotifyApi.addToMySavedTracks([trackId]).then(
-    function (data) {
-      console.log("Added track to library!");
-      res.sendStatus(200);
-    },
-    function (err) {
-      console.log("Something went wrong!", err);
-      res.sendStatus(400);
-    }
-  );
+  try {
+    await spotifyApi.addToMySavedTracks([trackUri]);
+    res.status(200).send("Track added to your library!");
+  } catch (err) {
+    console.error(err);
+    res.status(400).send("Error adding track to your library");
+  }
 });
+
+console.log("Redirect URI:", process.env.REDIRECT_URI);
+console.log("Client ID:", process.env.CLIENT_ID);
+console.log("Client Secret:", process.env.CLIENT_SECRET);
 
 app.listen(3001);
