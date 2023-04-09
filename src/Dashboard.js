@@ -9,6 +9,7 @@ import { FaPlay } from "react-icons/fa";
 import { BsFillHandThumbsDownFill } from "react-icons/bs";
 import { BsFillHandThumbsUpFill } from "react-icons/bs";
 import { BsFillPlusCircleFill } from "react-icons/bs";
+import { BsCheckCircle } from "react-icons/bs";
 import { GiPauseButton } from "react-icons/gi";
 import SpotifyPlayer from "react-spotify-web-playback";
 import GenreFilter from "./GenreFilter";
@@ -158,41 +159,41 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
   const [createdPlaylistId, setCreatedPlaylistId] = useState(null);
 
   const handleLikeClick = () => {
-    // Step 1: Get the ID of the currently playing song
-    spotifyApi.getMyCurrentPlayingTrack().then(
-      (response) => {
-        console.log("response from getMyCurrentPlayingTrack:", response);
-        if (response && response.item) {
-          const trackId = response.item.id;
-
-          // Step 2: Get the ID of the playlist you just created (or want to add the song to)
-          const playlistId = "Tindefy";
-
-          // Step 3: Add the song to the playlist
-          spotifyApi
-            .addTracksToPlaylist(playlistId, [`spotify:track:${trackId}`])
-            .then(
-              (response) => {
-                console.log("Track added to the playlist!");
-              },
-              (err) => {
-                console.log("Something went wrong when adding the track!", err);
-              }
-            );
-        } else {
-          console.log(
-            "No track is currently playing or the response is not as expected."
-          );
-        }
-      },
-      (err) => {
-        console.log(
-          "Something went wrong when getting the current playing track!",
-          err
-        );
-      }
-    );
+    if (playingTrack) {
+      addToMySavedTracks(playingTrack.uri.split(":")[2]);
+      handleSkipClick(); // Skip to the next song
+      setShowNotification(true);
+      setShowSuccessIcon(true);
+      setTimeout(() => {
+        setShowNotification(false);
+        setShowSuccessIcon(false);
+      }, 3000);
+    } else {
+      console.log("No track is currently playing.");
+    }
   };
+
+  const [showNotification, setShowNotification] = useState(false);
+  const [showSuccessIcon, setShowSuccessIcon] = useState(false);
+
+  const Notification = () => (
+    <div
+      className={`fixed p-2 border rounded-md font-bold text-white bg-primary ${
+        showNotification ? "visible" : "invisible"
+      }`}
+      style={{
+        top: "1rem",
+        right: "1rem",
+      }}
+    >
+      <span>Track added to library</span>
+      {showSuccessIcon && (
+        <span className="text-green-500 ml-2">
+          <BsCheckCircle />
+        </span>
+      )}
+    </div>
+  );
 
   const [selectedGenre, setSelectedGenre] = useState("");
   const handleGenreFilter = (genre) => {
@@ -276,7 +277,7 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
     // Create a private playlist called "Tindefy"
     spotifyApi
       .createPlaylist("Tindefy", {
-        description: "My description",
+        description: "Playlist generated from Tindefy",
         public: true,
       })
       .then(
@@ -290,6 +291,17 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
         }
       );
   };
+
+  function addToMySavedTracks(trackId) {
+    spotifyApi.addToMySavedTracks([trackId]).then(
+      function (data) {
+        console.log("Added track!");
+      },
+      function (err) {
+        console.log("Something went wrong!", err);
+      }
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-500 justify-center items-center pt-20">
@@ -368,6 +380,7 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
           setIsPlaying={setIsPlaying}
         />
       </div>
+      <Notification />
     </div>
   );
 }

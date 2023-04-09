@@ -40,6 +40,13 @@ function ArtistFilter({
   };
 
   const handleSelect = async (artistId) => {
+    const selectedArtist = artistOptions.find(
+      (artist) => artist.id === artistId
+    );
+
+    setSearchTerm(selectedArtist.name);
+    setArtistOptions([]);
+
     onArtistSelect(artistId);
     const topTracks = await fetchTopTracks(artistId);
 
@@ -54,6 +61,7 @@ function ArtistFilter({
       images: randomTrack.album.images,
     });
   };
+
   // ...
 
   return (
