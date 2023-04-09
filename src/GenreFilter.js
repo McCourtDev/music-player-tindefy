@@ -11,7 +11,7 @@ function GenreFilter({ handleFilter }) {
   return (
     <div className="relative">
       <select
-        className="block appearance-none w-full bg-primary border border-gray-700 text-white py-3 px-4 pr-8   rounded leading-tight focus:outline-none focus:bg-primary focus:border-gray-500  "
+        className="block appearance-none w-full bg-primary border border-gray-700 text-white py-3 px-4 pr-8   rounded leading-tight focus:outline-none focus:bg-primary focus:border-gray-500 hover:bg-cyan-500  "
         value={selectedGenre}
         onChange={handleChange}
       >

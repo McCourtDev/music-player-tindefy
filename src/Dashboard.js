@@ -8,18 +8,21 @@ import Logo from "./logo-1.png";
 import { FaPlay } from "react-icons/fa";
 import { BsFillHandThumbsDownFill } from "react-icons/bs";
 import { BsFillHandThumbsUpFill } from "react-icons/bs";
+import { BsFillPlusCircleFill } from "react-icons/bs";
 import { GiPauseButton } from "react-icons/gi";
 import SpotifyPlayer from "react-spotify-web-playback";
 import GenreFilter from "./GenreFilter";
 import TopTracks from "./TopTracks";
 import ArtistFilter from "./ArtistFilter";
+import TopArtists from "./TopArtists";
+import NewReleases from "./NewReleases";
 
 // Clinet ID
 const spotifyApi = new SpotifyWebApi({
   clientId: "319f13bb4a2b48bfbb1271eadd29e2cb",
 });
 // Variables
-export default function Dashboard({ code }) {
+export default function Dashboard({ code, loggedIn, setLoggedIn }) {
   const accessToken = useAuth(code);
   const [search, setSearch] = useState("");
 
@@ -54,6 +57,14 @@ export default function Dashboard({ code }) {
     const randomIndex = Math.floor(Math.random() * genres.length);
     return genres[randomIndex];
   }
+
+  useEffect(() => {
+    if (!accessToken) return;
+    spotifyApi.setAccessToken(accessToken);
+    if (!loggedIn) {
+      setLoggedIn(true); // Set loggedIn state to true when access token is set
+    }
+  }, [accessToken, loggedIn, setLoggedIn]);
 
   // This hook makes a HTTP GET request to the /lyrics endpoint
   useEffect(() => {
@@ -126,11 +137,12 @@ export default function Dashboard({ code }) {
     });
   }
 
-  async function addSongToPlaylist(trackUri) {
+  async function addSongToPlaylist(trackUri, playlistId) {
     try {
       const response = await axios.post("http://localhost:3001/spotify/like", {
         accessToken: accessToken,
         trackUri: trackUri,
+        playlistId: playlistId,
       });
 
       if (response.status === 200) {
@@ -143,21 +155,43 @@ export default function Dashboard({ code }) {
     }
   }
 
-  const handleLikeClick = async () => {
-    try {
-      if (!accessToken || !playingTrack || !playingTrack.uri) return;
-      console.log("Track URI:", playingTrack.uri);
-      await addSongToPlaylist(playingTrack.uri); // Call the addSongToPlaylist function here
-      console.log("Added track to library!");
-    } catch (error) {
-      console.log("Error object:", error);
-      if (error.xhr) {
-        console.log("Error status:", error.xhr.status);
-        console.log("Error response body:", error.xhr.responseText);
-      } else {
-        console.log("Unable to get more information about the error.");
+  const [createdPlaylistId, setCreatedPlaylistId] = useState(null);
+
+  const handleLikeClick = () => {
+    // Step 1: Get the ID of the currently playing song
+    spotifyApi.getMyCurrentPlayingTrack().then(
+      (response) => {
+        console.log("response from getMyCurrentPlayingTrack:", response);
+        if (response && response.item) {
+          const trackId = response.item.id;
+
+          // Step 2: Get the ID of the playlist you just created (or want to add the song to)
+          const playlistId = "Tindefy";
+
+          // Step 3: Add the song to the playlist
+          spotifyApi
+            .addTracksToPlaylist(playlistId, [`spotify:track:${trackId}`])
+            .then(
+              (response) => {
+                console.log("Track added to the playlist!");
+              },
+              (err) => {
+                console.log("Something went wrong when adding the track!", err);
+              }
+            );
+        } else {
+          console.log(
+            "No track is currently playing or the response is not as expected."
+          );
+        }
+      },
+      (err) => {
+        console.log(
+          "Something went wrong when getting the current playing track!",
+          err
+        );
       }
-    }
+    );
   };
 
   const [selectedGenre, setSelectedGenre] = useState("");
@@ -221,41 +255,69 @@ export default function Dashboard({ code }) {
       images: randomTrack.album.images,
     });
   };
+
+  const createPlaylist = () => {
+    spotifyApi
+      .createPlaylist("Tindefy", {
+        description: "Playlist generated from Tindefy",
+        public: true,
+      })
+      .then(
+        function (data) {
+          console.log("Created playlist!", data);
+        },
+        function (err) {
+          console.log("Something went wrong!", err);
+        }
+      );
+  };
+
+  const handleCreatePlaylistClick = () => {
+    // Create a private playlist called "Tindefy"
+    spotifyApi
+      .createPlaylist("Tindefy", {
+        description: "My description",
+        public: true,
+      })
+      .then(
+        (data) => {
+          console.log("Created playlist!");
+          // Set the createdPlaylistId state with the new playlist's ID
+          setCreatedPlaylistId(data.id);
+        },
+        (err) => {
+          console.log("Something went wrong!", err);
+        }
+      );
+  };
+
   return (
-    <div className="flex h-screen flex-col bg-slate-500 justify-center items-center ">
-      <div
-        id="Card"
-        className="h-1/2 w-1/2 flex justify-center bg-gray-900 relative rounded-lg shadow-custom "
-      >
-        <div className="rounded overflow-hidden shadow-lg w-full">
-          <img
-            className="h-24 flex items-center justify-center mx-auto"
-            src={Logo}
-            alt="Sunset in the mountains"
-          />
+    <div className="flex min-h-screen flex-col bg-slate-500 justify-center items-center pt-20">
+      <div className="w-full flex flex-col items-center">
+        <div
+          id="Card"
+          className="w-1/2 bg-gray-900 rounded-lg shadow-custom mb-8"
+        >
+          <img className="h-24 w-auto mx-auto glow" src={Logo} alt="" />
+
           <div className="px-6 py-4">
             {playingTrack?.images?.length && (
               <img
-                className="h-1/2 w-1/2 md:h-96 md:w-96 flex items-center justify-center mx-auto bg-white"
+                className="h-1/2 w-1/2 md:h-96 md:w-96 mx-auto bg-white shadow-custom"
                 src={playingTrack.images[0].url}
                 alt={playingTrack.name}
-                style={{ width: "25%", height: "25%" }}
               />
             )}
-            <div className="font-bold text-xl mb-2 flex justify-center text-white p-2">
+            <div className="font-bold text-xl mb-2 text-center text-white p-2">
               {playingTrack ? playingTrack.title : "(Song Title)"}
             </div>
-            <h2 className="text-base flex justify-center text-white ">
+            <h2 className="text-base text-center text-white">
               {playingTrack ? playingTrack.artist : "(Artist)"}
             </h2>
 
-            {/* Add margin-top to position buttons below title and artist */}
-            <div
-              className="absolute bottom-0 w-full text-center text-4xl -space-x-36 flex justify-center pb-4"
-              style={{ marginTop: "4rem" }}
-            >
-              <button onClick={handleLikeClick}>
-                <BsFillHandThumbsUpFill className="fill-primary hover:fill-green-500" />
+            <div className="text-center text-4xl space-x-12 flex justify-center pb-4 mt-8">
+              <button onClick={handleSkipClick}>
+                <BsFillHandThumbsDownFill className="fill-primary hover:fill-red-600" />
               </button>
 
               <button onClick={handleFaplayClick}>
@@ -265,30 +327,39 @@ export default function Dashboard({ code }) {
                   <FaPlay className="fill-primary hover:opacity-60" />
                 )}
               </button>
-              <button onClick={handleSkipClick}>
-                <BsFillHandThumbsDownFill className="fill-primary hover:fill-red-600" />
+              <button onClick={handleLikeClick}>
+                <BsFillHandThumbsUpFill className="fill-primary hover:fill-green-500" />
+              </button>
+
+              <button onClick={handleCreatePlaylistClick}>
+                <BsFillPlusCircleFill className="fill-primary hover:fill-blue-500" />
               </button>
             </div>
-            <div className="flex flex-col justify-center items-center">
-              <div className="absolute top-0 right-0 m-4">
-                <GenreFilter handleFilter={handleGenreFilter} />
-              </div>
-              <div className="absolute top-0 left-0 m-4">
+            <div className="flex justify-between mt-4">
+              <div>
                 <ArtistFilter
                   accessToken={accessToken}
-                  onArtistSelect={setSelectedArtist} // Pass setSelectedArtist function here
+                  onArtistSelect={setSelectedArtist}
                   fetchTopTracks={fetchTopTracks}
                   setPlayingTrack={setPlayingTrack}
                 />
               </div>
+              <div>
+                <GenreFilter handleFilter={handleGenreFilter} />
+              </div>
             </div>
           </div>
         </div>
+        <div className="w-1/2">
+          <TopTracks accessToken={accessToken} />
+        </div>
+        <div className="w-1/2">
+          <TopArtists accessToken={accessToken} />
+        </div>
+        <div className="w-1/2">
+          <NewReleases accessToken={accessToken} />
+        </div>
       </div>
-      <div>
-        <TopTracks accessToken={accessToken} />
-      </div>
-
       <div className="fixed bottom-0 w-full">
         <Player
           accessToken={accessToken}

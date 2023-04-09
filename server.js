@@ -4,6 +4,7 @@ const SpotifyWebApi = require("spotify-web-api-node");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const lyricsFinder = require("lyrics-finder");
+const PORT = process.env.PORT || 3001;
 
 const app = express();
 app.use(cors());
@@ -56,6 +57,14 @@ app.post("/login", (req, res) => {
     });
 });
 
+app.post("/spotify/createPlaylist", (req, res) => {
+  // Your logic for creating a playlist goes here
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
+
 app.get("/lyrics", async (req, res) => {
   const lyrics =
     (await lyricsFinder(req.query.artist, req.query.track)) ||
@@ -75,6 +84,34 @@ app.post("/spotify/like", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(400).send("Error adding track to your library");
+  }
+});
+
+app.post("/spotify/createPlaylist", async (req, res) => {
+  const { accessToken } = req.body;
+
+  if (!accessToken) {
+    return res.status(400).json({ error: "Access token is required" });
+  }
+
+  const spotifyApi = new SpotifyWebApi({
+    accessToken,
+  });
+
+  try {
+    const userData = await spotifyApi.getMe();
+    const userId = userData.body.id;
+
+    const playlist = await spotifyApi.createPlaylist(userId, "My Playlist", {
+      public: true,
+    });
+
+    res.status(200).json({
+      playlistId: playlist.body.id,
+    });
+  } catch (error) {
+    console.error("Error creating playlist", error);
+    res.status(500).json({ error: "Failed to create playlist" });
   }
 });
 

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { AuthContext } from "./AuthContext";
 import Logo from "./logo-1.png";
 
@@ -7,6 +7,11 @@ const AUTH_URL =
 
 export default function Header() {
   const { loggedIn, setLoggedIn } = useContext(AuthContext);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setLoggedIn(!!token);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -28,16 +33,26 @@ export default function Header() {
           </span>
         </a>
 
-        <div className="flex md:order-2">
-          <button
-            onClick={
-              loggedIn ? handleLogout : () => (window.location.href = AUTH_URL)
-            }
-            className="text-white bg-primary hover:bg-cyan-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-3 md:mr-0 dark:bg-primary dark:hover:bg-cyan-500"
-          >
-            {loggedIn ? "Logout" : "Login"}
-          </button>
-        </div>
+        {loggedIn ? (
+          <div className="flex md:order-2">
+            <button
+              onClick={handleLogout}
+              className="text-white bg-primary hover:bg-cyan-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-3 md:mr-0 dark:bg-primary dark:hover:bg-cyan-500"
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <div className="flex md:order-2">
+            <button
+              onClick={() => (window.location.href = AUTH_URL)}
+              className="text-white bg-primary hover:bg-cyan-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-3 md:mr-0 dark:bg-primary dark:hover:bg-cyan-500"
+            >
+              Login
+            </button>
+          </div>
+        )}
+
         <div
           className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1"
           id="navbar-cta"

@@ -14,11 +14,13 @@ export default function useAuth(code) {
       })
       .then((res) => {
         setAccessToken(res.data.accessToken);
+        localStorage.setItem("token", res.data.accessToken);
         setRefreshToken(res.data.refreshToken);
         setExpiresIn(res.data.expiresIn);
         window.history.pushState({}, null, "/");
       })
       .catch(() => {
+        localStorage.removeItem("token");
         window.location = "/";
       });
   }, [code]);
