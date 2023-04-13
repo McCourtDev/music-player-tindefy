@@ -8,10 +8,24 @@ const spotifyApi = new SpotifyWebApi({
 function TopTracks({ accessToken }) {
   const [topTracks, setTopTracks] = useState([]);
   const [isMinimized, setIsMinimized] = useState(true);
+  const [displayName, setDisplayName] = useState("");
+  const [profileImage, setProfileImage] = useState("");
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await spotifyApi.getMe();
+      setDisplayName(response.body.display_name);
+      setProfileImage(response.body.images[0]?.url);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     if (!accessToken) return;
     spotifyApi.setAccessToken(accessToken);
+
+    fetchUserProfile();
 
     const getTopTracks = async () => {
       try {
@@ -32,7 +46,16 @@ function TopTracks({ accessToken }) {
     <div className=" mb-28">
       <div className="bg-gray-900 p-6 rounded-lg mt-12 shadow-custom">
         <div className="flex flex-col items-center mb-4">
-          <h2 className="text-xl font-bold text-white">Your Top Tracks</h2>
+          <h2 className="text-xl font-bold text-white flex items-center">
+            {displayName ? `${displayName}'s Top Tracks` : "Your Top Tracks"}
+            {profileImage && (
+              <img
+                src={profileImage}
+                alt="User's profile"
+                className="w-8 h-8 object-cover rounded-full ml-2"
+              />
+            )}
+          </h2>
           <button
             className="px-4 py-2 bg-primary text-white rounded-lg mt-4"
             onClick={toggleMinimize}

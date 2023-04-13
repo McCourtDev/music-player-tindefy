@@ -8,10 +8,24 @@ const spotifyApi = new SpotifyWebApi({
 function TopArtists({ accessToken }) {
   const [topArtists, setTopArtists] = useState([]);
   const [isMinimized, setIsMinimized] = useState(true);
+  const [displayName, setDisplayName] = useState("");
+  const [profileImage, setProfileImage] = useState("");
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await spotifyApi.getMe();
+      setDisplayName(response.body.display_name);
+      setProfileImage(response.body.images[0]?.url);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     if (!accessToken) return;
     spotifyApi.setAccessToken(accessToken);
+
+    fetchUserProfile();
 
     const getTopArtists = async () => {
       try {
@@ -32,7 +46,16 @@ function TopArtists({ accessToken }) {
     <div className=" mb-28">
       <div className="bg-gray-900 p-6 rounded-lg mt-12 shadow-custom">
         <div className="flex flex-col items-center mb-4">
-          <h2 className="text-xl font-bold text-white">Your Top Artists</h2>
+          <h2 className="text-xl font-bold text-white flex items-center">
+            {displayName ? `${displayName}'s Top Artists` : "Your Top Artists"}
+            {profileImage && (
+              <img
+                src={profileImage}
+                alt="User's profile"
+                className="w-8 h-8 object-cover rounded-full ml-2"
+              />
+            )}
+          </h2>
           <button
             className="px-4 py-2 bg-primary text-white rounded-lg mt-4"
             onClick={toggleMinimize}

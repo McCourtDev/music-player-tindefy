@@ -20,9 +20,9 @@ function GenreFilter({ handleFilter }) {
         <option value="pop">Pop</option>
         <option value="hip-hop">Hip Hop</option>
         <option value="jazz">Jazz</option>
-        <option value="dance">dance</option>
-        <option value="deep house">deep house</option>
-        <option value="rap">rap</option>
+        <option value="dance">Dance</option>
+        <option value="deep house">Deep House</option>
+        <option value="rap">Rap</option>
         <option value="Boy Band">Boy Band</option>
         <option value="Synthpop">Synthpop</option>
         <option value="Vocal House">Vocal House</option>
@@ -30,6 +30,13 @@ function GenreFilter({ handleFilter }) {
         <option value="Progressive Trance">Progressive Trance</option>
         <option value="Old School Hip Hop">Old School Hip Hop</option>
         <option value="Funk">Funk</option>
+        <option value="R&b">R&b</option>
+        <option value="Techno">Techno</option>
+        <option value="Deep Funk House">Deep Funk House</option>
+        <option value="Deep Chill">Deep Chill</option>
+        <option value="Deep Disco House">Deep Disco House</option>
+        <option value="Electronica">Electronica</option>
+        <option value="Electropowerpop">Electropowerpop</option>
       </select>
       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
         <svg

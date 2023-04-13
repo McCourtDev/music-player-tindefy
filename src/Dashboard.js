@@ -26,7 +26,7 @@ const spotifyApi = new SpotifyWebApi({
 export default function Dashboard({ code, loggedIn, setLoggedIn }) {
   const accessToken = useAuth(code);
   const [search, setSearch] = useState("");
-
+  const [playedTracks, setPlayedTracks] = useState(new Set());
   const [playingTrack, setPlayingTrack] = useState();
   const [lyrics, setLyrics] = useState("");
 
@@ -54,6 +54,7 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
       "Progressive Trance",
       "Old School Hip Hop",
       "Funk",
+      "R&b",
     ];
     const randomIndex = Math.floor(Math.random() * genres.length);
     return genres[randomIndex];
@@ -125,8 +126,18 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
     spotifyApi.searchTracks(randomQuery).then((res) => {
       const tracks = res.body.tracks.items;
 
-      // Choose a random track from the search results
-      const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
+      // Filter out tracks that have already been played
+      const unplayedTracks = tracks.filter(
+        (track) => !playedTracks.has(track.uri)
+      );
+
+      // If there are no unplayed tracks, clear the playedTracks set and use all tracks
+      const availableTracks =
+        unplayedTracks.length > 0 ? unplayedTracks : tracks;
+
+      // Choose a random track from the available tracks
+      const randomTrack =
+        availableTracks[Math.floor(Math.random() * availableTracks.length)];
 
       // Set the playing track to the chosen track
       setPlayingTrack({
@@ -135,6 +146,18 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
         uri: randomTrack.uri,
         images: randomTrack.album.images,
       });
+
+      // Add the chosen track to the playedTracks set
+      setPlayedTracks((prevPlayedTracks) => {
+        const updatedPlayedTracks = new Set(prevPlayedTracks);
+        updatedPlayedTracks.add(randomTrack.uri);
+        return updatedPlayedTracks;
+      });
+
+      // If we had to use all tracks, clear the playedTracks set after adding the current track
+      if (unplayedTracks.length === 0) {
+        setPlayedTracks(new Set([randomTrack.uri]));
+      }
     });
   }
 
