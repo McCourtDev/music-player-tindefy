@@ -91,6 +91,7 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
   }, [hasMounted, handleSkipClick]);
 
   const [selectedArtist, setSelectedArtist] = useState("");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   function handleSkipClick() {
     if (selectedArtist) {
       handleArtistFilter(selectedArtist);

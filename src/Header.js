@@ -11,6 +11,7 @@ export default function Header() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     setLoggedIn(!!token);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogout = () => {
