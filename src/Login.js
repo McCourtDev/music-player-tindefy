@@ -7,7 +7,7 @@ const AUTH_URL =
   "https://accounts.spotify.com/authorize?client_id=319f13bb4a2b48bfbb1271eadd29e2cb&response_type=code&redirect_uri=http://localhost:3000&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state%20user-top-read%20playlist-modify-public%20playlist-modify-private";
 
 export default function Login() {
-  const { loggedIn, setLoggedIn } = useContext(AuthContext);
+  const { setLoggedIn } = useContext(AuthContext);
   const [showFAQ, setShowFAQ] = useState(false);
 
   const handleClick = () => {
