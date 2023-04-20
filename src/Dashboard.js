@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import useAuth from "./useAuth";
 import Player from "./Player";
 import SpotifyWebApi from "spotify-web-api-node";
-import TrackSearchResult from "./TrackSearchResult";
-import axios from "axios";
 import Logo from "./logo-1.png";
 import { FaPlay } from "react-icons/fa";
 import { BsFillHandThumbsDownFill } from "react-icons/bs";
@@ -11,7 +9,6 @@ import { BsFillHandThumbsUpFill } from "react-icons/bs";
 import { BsFillPlusCircleFill } from "react-icons/bs";
 import { BsCheckCircle } from "react-icons/bs";
 import { GiPauseButton } from "react-icons/gi";
-import SpotifyPlayer from "react-spotify-web-playback";
 import GenreFilter from "./GenreFilter";
 import TopTracks from "./TopTracks";
 import ArtistFilter from "./ArtistFilter";
@@ -25,17 +22,8 @@ const spotifyApi = new SpotifyWebApi({
 // Variables
 export default function Dashboard({ code, loggedIn, setLoggedIn }) {
   const accessToken = useAuth(code);
-  const [search, setSearch] = useState("");
   const [playedTracks, setPlayedTracks] = useState(new Set());
   const [playingTrack, setPlayingTrack] = useState();
-  const [lyrics, setLyrics] = useState("");
-
-  // This function clears the searchbar, search results and lyrics when entering new song in search
-  function chooseTrack(track) {
-    setPlayingTrack(track);
-    setSearch("");
-    setLyrics("");
-  }
 
   function getRandomGenre() {
     const genres = [
@@ -55,6 +43,15 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
       "Old School Hip Hop",
       "Funk",
       "R&b",
+      "Britpop",
+      "Deep Ambient",
+      "Deep Funk House",
+      "Deep Melodic House",
+      "Deep Pop Emo",
+      "Deep Progressive Trance",
+      "Deep Tech House",
+      "Garage Pop",
+      "Pop Emo",
     ];
     const randomIndex = Math.floor(Math.random() * genres.length);
     return genres[randomIndex];
@@ -67,23 +64,6 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
       setLoggedIn(true); // Set loggedIn state to true when access token is set
     }
   }, [accessToken, loggedIn, setLoggedIn]);
-
-  // This hook makes a HTTP GET request to the /lyrics endpoint
-  useEffect(() => {
-    // Only runs when the playingTrack state variable changes
-    if (!playingTrack) return;
-
-    axios
-      .get("http://localhost:3001/lyrics", {
-        params: {
-          track: playingTrack.title,
-          artist: playingTrack.artist,
-        },
-      })
-      .then((res) => {
-        setLyrics(res.data.lyrics);
-      });
-  }, [playingTrack]);
 
   // This hook only runs when the accessToken state variable changes to ensure that the accessToken is only updated when it changes.
 
@@ -161,25 +141,7 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
     });
   }
 
-  async function addSongToPlaylist(trackUri, playlistId) {
-    try {
-      const response = await axios.post("http://localhost:3001/spotify/like", {
-        accessToken: accessToken,
-        trackUri: trackUri,
-        playlistId: playlistId,
-      });
-
-      if (response.status === 200) {
-        console.log("Song added to playlist");
-      } else {
-        console.error("Error adding song to playlist");
-      }
-    } catch (error) {
-      console.error("Error calling the API", error);
-    }
-  }
-
-  const [createdPlaylistId, setCreatedPlaylistId] = useState(null);
+  const [setCreatedPlaylistId] = useState(null);
 
   const handleLikeClick = () => {
     if (playingTrack) {
@@ -263,7 +225,6 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
       console.error(error);
     }
   };
-  const [tracks, setTracks] = useState([]);
 
   const handleArtistFilter = async (artistId) => {
     const topTracks = await fetchTopTracks(artistId);
@@ -278,22 +239,6 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
       uri: randomTrack.uri,
       images: randomTrack.album.images,
     });
-  };
-
-  const createPlaylist = () => {
-    spotifyApi
-      .createPlaylist("Tindefy", {
-        description: "Playlist generated from Tindefy",
-        public: true,
-      })
-      .then(
-        function (data) {
-          console.log("Created playlist!", data);
-        },
-        function (err) {
-          console.log("Something went wrong!", err);
-        }
-      );
   };
 
   const handleCreatePlaylistClick = () => {
@@ -333,7 +278,7 @@ export default function Dashboard({ code, loggedIn, setLoggedIn }) {
           id="Card"
           className="w-1/2 bg-gray-900 rounded-lg shadow-custom mb-8"
         >
-          <img className="h-24 w-auto mx-auto glow" src={Logo} alt="" />
+          <img className="h-24 w-auto mx-auto " src={Logo} alt="" />
 
           <div className="px-6 py-4">
             {playingTrack?.images?.length && (

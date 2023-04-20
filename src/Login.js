@@ -1,15 +1,17 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Logo from "./logo-1.png";
 import { AuthContext } from "./AuthContext";
+import FAQ from "./FAQ";
 
 const AUTH_URL =
   "https://accounts.spotify.com/authorize?client_id=319f13bb4a2b48bfbb1271eadd29e2cb&response_type=code&redirect_uri=http://localhost:3000&scope=streaming%20user-read-email%20user-read-private%20user-library-read%20user-library-modify%20user-read-playback-state%20user-modify-playback-state%20user-top-read%20playlist-modify-public%20playlist-modify-private";
 
 export default function Login() {
   const { loggedIn, setLoggedIn } = useContext(AuthContext);
+  const [showFAQ, setShowFAQ] = useState(false);
 
   const handleClick = () => {
-    console.log("Login button clicked");
+    setShowFAQ((prevShowFAQ) => !prevShowFAQ);
   };
 
   useEffect(() => {
@@ -20,8 +22,8 @@ export default function Login() {
   }, [setLoggedIn]);
 
   return (
-    <div className="h-screen bg-slate-500 flex flex-col items-center justify-center space-y-6">
-      <img src={Logo} className="h-2/4 w-auto" alt="Tinderfy Logo" />
+    <div className="min-h-screen bg-slate-500 flex flex-col items-center justify-center space-y-6">
+      <img src={Logo} className=" h-80 w-auto" alt="Tinderfy Logo" />
       <h1 className="text-white text-3xl text-center font-bold">
         Welcome to Tindefy
       </h1>
@@ -35,6 +37,13 @@ export default function Login() {
       >
         Log in with Spotify
       </button>
+      <button
+        onClick={handleClick}
+        className="bg-primary hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded mt-4"
+      >
+        FAQ
+      </button>
+      {showFAQ && <FAQ />}
     </div>
   );
 }

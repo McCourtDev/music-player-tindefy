@@ -11,6 +11,7 @@ function ArtistFilter({
   const [searchTerm, setSearchTerm] = useState("");
   const [artistOptions, setArtistOptions] = useState([]);
   const [playSimilarArtists, setPlaySimilarArtists] = useState(false);
+  const [isValidInput, setIsValidInput] = useState(true);
   const spotifyApi = new SpotifyWebApi({
     clientId: "319f13bb4a2b48bfbb1271eadd29e2cb",
   });
@@ -46,7 +47,18 @@ function ArtistFilter({
 
   const handleChange = (e) => {
     setSearchTerm(e.target.value);
+    setIsValidInput(true);
     searchArtists(e.target.value);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      if (!searchTerm.trim()) {
+        setIsValidInput(false);
+      } else {
+        setIsValidInput(true);
+      }
+    }
   };
 
   const handleSelect = async (artistId) => {
@@ -134,7 +146,10 @@ function ArtistFilter({
         placeholder="Search for an artist"
         value={searchTerm}
         onChange={handleChange}
-        className="border py-2 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 ml-4"
+        onKeyPress={handleKeyPress}
+        className={`border py-2 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 ml-4 ${
+          !isValidInput ? "border-red-500" : ""
+        }`}
         style={{ paddingRight: "1.5rem" }}
       />
 
@@ -145,6 +160,10 @@ function ArtistFilter({
         >
           ×
         </button>
+      )}
+
+      {!isValidInput && (
+        <p className="text-red-500 mt-2">Please enter an Artist</p>
       )}
 
       {artistOptions.length > 0 && (
